@@ -103,7 +103,7 @@ void sinsp_parser::init_metaevt(metaevents_state& evt_state, uint16_t evt_type, 
 	evt_state.m_piscapevt = 0;
 	init_scapevt(evt_state, evt_type, buf_size);
 	evt_state.m_metaevt.m_inspector = m_inspector;
-	evt_state.m_metaevt.m_info = &(g_infotables.m_event_info[PPME_SYSDIGEVENT_X]);
+	evt_state.m_metaevt.m_info = &(g_infotables.m_event_info[PPME_ENGINEEVENT_X]);
 	evt_state.m_metaevt.m_cpuid = 0;
 	evt_state.m_metaevt.m_evtnum = 0;
 	evt_state.m_metaevt.m_fdinfo = NULL;
@@ -133,7 +133,7 @@ void sinsp_parser::process_event(sinsp_evt *evt)
 			etype != PPME_SCHEDSWITCH_6_E &&
 			etype != PPME_DROP_E &&
 			etype != PPME_DROP_X &&
-			etype != PPME_SYSDIGEVENT_E &&
+			etype != PPME_ENGINEEVENT_E &&
 			etype != PPME_PROCINFO_E &&
 			etype != PPME_CPU_HOTPLUG_E &&
 			m_inspector->m_our_pid)

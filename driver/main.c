@@ -857,7 +857,7 @@ cleanup_ioctl_procinfo:
 		event_data.event_info.context_data.sched_prev = (void *)DEI_DISABLE_DROPPING;
 		event_data.event_info.context_data.sched_next = (void *)0;
 
-		record_event_consumer(consumer, PPME_SYSDIGEVENT_E, UF_NEVER_DROP, ppm_nsecs(), &event_data);
+		record_event_consumer(consumer, PPME_ENGINEEVENT_E, UF_NEVER_DROP, ppm_nsecs(), &event_data);
 
 		ret = 0;
 		goto cleanup_ioctl;
@@ -1618,7 +1618,7 @@ static int record_event_consumer(struct ppm_consumer_t *consumer,
 
 	ring_info->n_evts++;
 	if (event_datap->category == PPMC_CONTEXT_SWITCH && event_datap->event_info.context_data.sched_prev != NULL) {
-		if (event_type != PPME_SYSDIGEVENT_E && event_type != PPME_CPU_HOTPLUG_E) {
+		if (event_type != PPME_ENGINEEVENT_E && event_type != PPME_CPU_HOTPLUG_E) {
 			ASSERT(event_datap->event_info.context_data.sched_prev != NULL);
 			ASSERT(event_datap->event_info.context_data.sched_next != NULL);
 			ring_info->n_context_switches++;
