@@ -59,9 +59,6 @@ limitations under the License.
 const chiseldir_info g_chisel_dirs_array[] =
 	{
 		{false, ""}, // file as is
-#ifdef _WIN32
-		{false, "c:/sysdig/chisels/"},
-#endif
 		{false, "./chisels/"},
 		{true, "~/.chisels/"},
 };

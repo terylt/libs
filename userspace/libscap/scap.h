@@ -26,7 +26,7 @@ extern "C" {
 
 	\section Introduction
 
-	libscap is the low-level sysdig component that exports the following functionality:
+	libscap is the low-level capture component that exports the following functionality:
 	- live capture control (start/stop/pause...)
 	- trace file management
 	- event retrieval
@@ -932,7 +932,7 @@ const scap_machine_info* scap_get_machine_info(scap_t* handle);
 int32_t scap_set_snaplen(scap_t* handle, uint32_t snaplen);
 
 /*!
-  \brief Clear the event mask: no events will be passed to sysdig
+  \brief Clear the event mask: no events will be passed to the consumer
 
   \param handle Handle to the capture instance.
 
@@ -942,7 +942,7 @@ int32_t scap_clear_eventmask(scap_t* handle);
 
 /*!
   \brief Set the event into the eventmask so that
-  sysdig-based apps can receive the event. Useful for offloading
+  consumer apps can receive the event. Useful for offloading
   operations such as evt.type=open
 
   \param handle Handle to the capture instance.
@@ -954,7 +954,7 @@ int32_t scap_set_eventmask(scap_t* handle, uint32_t event_id);
 
 /*!
   \brief Unset the event into the eventmask so that
-  sysdig-based apps can no longer receive the event. It is
+  consumer apps can no longer receive the event. It is
   the opposite of scap_set_eventmask
 
   \param handle Handle to the capture instance.
@@ -966,7 +966,7 @@ int32_t scap_unset_eventmask(scap_t* handle, uint32_t event_id);
 
 /*!
   \brief Get the root directory of the system. This usually changes
-  if sysdig runs in a container, so that all the information for the
+  if the consumer runs in a container, so that all the information for the
   host can be correctly extracted.
 */
 const char* scap_get_host_root();

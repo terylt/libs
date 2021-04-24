@@ -37,9 +37,7 @@ public:
 
 	  \param inspector Pointer to the inspector instance that will generate the
 	   events to be formatter.
-	  \param fmt The printf-like format to use. The accepted format is the same
-	   as the one of the sysdig '-p' command line flag, so refer to the sysdig
-	   manual for details.
+	  \param fmt The printf-like format to use.
 	*/
 	sinsp_evt_formatter(sinsp* inspector, const string& fmt);
 

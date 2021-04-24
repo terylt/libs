@@ -126,7 +126,7 @@ sinsp::sinsp(bool static_container, const std::string static_id, const std::stri
 	m_print_container_data = false;
 
 #if defined(HAS_CAPTURE)
-	m_sysdig_pid = getpid();
+	m_our_pid = getpid();
 #endif
 
 	uint32_t evlen = sizeof(scap_evt) + 2 * sizeof(uint16_t) + 2 * sizeof(uint64_t);
@@ -428,7 +428,7 @@ void sinsp::init()
 #if defined(HAS_CAPTURE)
 	if(m_mode == SCAP_MODE_LIVE)
 	{
-		if(scap_getpid_global(m_h, &m_sysdig_pid) != SCAP_SUCCESS)
+		if(scap_getpid_global(m_h, &m_our_pid) != SCAP_SUCCESS)
 		{
 			ASSERT(false);
 		}
@@ -1975,7 +1975,7 @@ void sinsp::init_mesos_client(string* api_server, bool verbose)
 									m_marathon_api_server,
 									true, // mesos leader auto-follow
 									m_marathon_api_server.empty(), // marathon leader auto-follow if no uri
-									mesos::credentials_t(), // mesos creds, the only way to provide creds in sysdig is embedded in URI
+									mesos::credentials_t(), // mesos creds, the only way to provide creds is embedded in URI
 									mesos::credentials_t(), // marathon creds
 									mesos::default_timeout_ms,
 									is_live,

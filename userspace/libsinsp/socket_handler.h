@@ -175,7 +175,7 @@ public:
 		{
 			request << '?' << query;
 		}
-		request << " HTTP/" << http_version << "\r\n" << m_keep_alive << "User-Agent: sysdig\r\n";
+		request << " HTTP/" << http_version << "\r\n" << m_keep_alive << "User-Agent: falcolibs\r\n";
 		if(!host_and_port.empty())
 		{
 			request << "Host: " << host_and_port << "\r\n";

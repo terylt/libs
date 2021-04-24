@@ -79,7 +79,7 @@ struct docker_async_instruction
 	bool request_rw_size;
 };
 
-class docker_async_source : public sysdig::async_key_value_source<docker_async_instruction, sinsp_container_info>
+class docker_async_source : public falcolibs::async_key_value_source<docker_async_instruction, sinsp_container_info>
 {
 	enum docker_response
 	{

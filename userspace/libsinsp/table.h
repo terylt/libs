@@ -20,7 +20,7 @@ limitations under the License.
 
 class sinsp_filter_check_reference;
 
-typedef enum sysdig_table_action
+typedef enum csd_table_action
 {
 	STA_NONE,
 	STA_PARENT_HANDLE,
@@ -35,7 +35,7 @@ typedef enum sysdig_table_action
 	STA_SPECTRO,
 	STA_SPECTRO_FILE,
 	STA_DESTROY_CHILD,
-}sysdig_table_action;
+}csd_table_action;
 
 class sinsp_table_field
 {

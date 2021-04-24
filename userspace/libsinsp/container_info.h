@@ -248,7 +248,7 @@ public:
 
 	sinsp_container_lookup_state m_lookup_state;
 #ifdef HAS_ANALYZER
-	std::string m_sysdig_agent_conf;
+	std::string m_agent_conf;
 #endif
 	uint64_t m_metadata_deadline;
 

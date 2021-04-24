@@ -42,7 +42,7 @@ void list_fields(bool verbose, bool markdown, bool names_only)
 
 	if(markdown && !names_only)
 	{
-		printf("# Sysdig Filter Fields List\n\n");
+		printf("# Filter Fields List\n\n");
 	}
 
 	vector<const filter_check_info*> fc_plugins;

@@ -348,7 +348,7 @@ int lua_cbacks::field(lua_State *ls)
 	{
 		//
 		// This happens if the lua code is calling field() without invoking
-		// sysdig.request_field() before.
+		// request_field() before.
 		//
 		lua_pushnil(ls);
 		return 1;
@@ -562,7 +562,7 @@ int lua_cbacks::subtract_ts(lua_State *ls)
 	return 1;
 }
 
-int lua_cbacks::run_sysdig(lua_State *ls)
+int lua_cbacks::run_app(lua_State *ls)
 {
 	lua_getglobal(ls, "sichisel");
 

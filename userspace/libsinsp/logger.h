@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 
 /**
- * Sysdig component logging API.  This API exposes the ability to log to a
+ * Component logging API.  This API exposes the ability to log to a
  * variety of log sinks.  sinsp_logger will use only one enabled log* sink;
  * if multiple are enabled, then it will use the first available one it
  * finds.  The order in which log sinks is considered is: (1) a registered

@@ -130,7 +130,7 @@ void ppm_task_cputime_adjusted(struct task_struct *p, cputime_t *ut, cputime_t *
 #endif
 
 #ifndef CONFIG_HAVE_SYSCALL_TRACEPOINTS
- #error The kernel must have HAVE_SYSCALL_TRACEPOINTS in order for sysdig to be useful
+ #error The kernel must have HAVE_SYSCALL_TRACEPOINTS in order for the collection to work
 #endif
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id);
@@ -390,8 +390,8 @@ static int ppm_open(struct inode *inode, struct file *filp)
 		 * will never get events for that cpu even if it later comes
 		 * online via hotplug. We could allocate these rings on-demand
 		 * later in this function if needed for hotplug, but that
-		 * requires the consumer to know to call open again, and sysdig
-		 * doesn't support that.
+		 * requires the consumer to know to call open again, and we
+		 * don't support that.
 		 */
 		for_each_online_cpu(cpu) {
 			ring = per_cpu_ptr(consumer->ring_buffers, cpu);
@@ -2148,8 +2148,8 @@ TRACEPOINT_PROBE(page_fault_probe, unsigned long address, struct pt_regs *regs, 
 	struct event_data_t event_data;
 
 	/* We register both tracepoints under the same probe and
-	 * sysdig event since there's little reason to expose this
-	 * complexity to the sysdig user. The distinction can still be made
+	 * collection event since there's little reason to expose this
+	 * complexity to the user. The distinction can still be made
 	 * in the output by looking for the USER_FAULT/SUPERVISOR_FAULT
 	 * flags
 	 */
@@ -2384,15 +2384,15 @@ static int do_cpu_callback(unsigned long cpu, long sd_action)
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0))
-static int sysdig_cpu_online(unsigned int cpu)
+static int sdprobe_cpu_online(unsigned int cpu)
 {
-	vpr_info("sysdig_cpu_online on cpu %d\n", cpu);
+	vpr_info("sdprobe_cpu_online on cpu %d\n", cpu);
 	return do_cpu_callback(cpu, 1);
 }
 
-static int sysdig_cpu_offline(unsigned int cpu)
+static int sdprobe_cpu_offline(unsigned int cpu)
 {
-	vpr_info("sysdig_cpu_offline on cpu %d\n", cpu);
+	vpr_info("sdprobe_cpu_offline on cpu %d\n", cpu);
 	return do_cpu_callback(cpu, 2);
 }
 #else /* LINUX_VERSION_CODE < KERNEL_VERSION(4, 10, 0)) */
@@ -2434,7 +2434,7 @@ static struct notifier_block cpu_notifier = {
 };
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0) */
 
-int sysdig_init(void)
+int sdprobe_init(void)
 {
 	dev_t dev;
 	unsigned int cpu;
@@ -2464,7 +2464,7 @@ int sysdig_init(void)
 
 	/*
 	 * Initialize the user I/O
-	 * ( + 1 for sysdig-events)
+	 * ( + 1 for probe-events)
 	 */
 	acrret = alloc_chrdev_region(&dev, 0, num_cpus + 1, PROBE_DEVICE_NAME);
 	if (acrret < 0) {
@@ -2549,9 +2549,9 @@ int sysdig_init(void)
 	 */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 10, 0))
 	hp_ret = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
-					   "sysdig/probe:online",
-					   sysdig_cpu_online,
-					   sysdig_cpu_offline);
+					   "falco/probe:online",
+					   sdprobe_cpu_online,
+					   sdprobe_cpu_offline);
 	if (hp_ret <= 0) {
 		pr_err("error registering cpu hotplug callback\n");
 		ret = hp_ret;
@@ -2592,7 +2592,7 @@ init_module_err:
 	return ret;
 }
 
-void sysdig_exit(void)
+void sdprobe_exit(void)
 {
 	int j;
 
@@ -2611,7 +2611,7 @@ void sysdig_exit(void)
 	if (g_ppm_class)
 		class_destroy(g_ppm_class);
 
-	/* + 1 for sysdig-events */
+	/* + 1 for probe-events */
 	unregister_chrdev_region(MKDEV(g_ppm_major, 0), g_ppm_numdevs + 1);
 
 	kfree(g_ppm_devs);
@@ -2628,8 +2628,8 @@ void sysdig_exit(void)
 #endif
 }
 
-module_init(sysdig_init);
-module_exit(sysdig_exit);
+module_init(sdprobe_init);
+module_exit(sdprobe_exit);
 module_param(max_consumers, uint, 0444);
 MODULE_PARM_DESC(max_consumers, "Maximum number of consumers that can simultaneously open the devices");
 #if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 20)

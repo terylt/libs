@@ -6,8 +6,8 @@ This file is dual licensed under either the MIT or GPL 2. See MIT.txt
 or GPL2.txt for full copies of the license.
 
 */
-#ifndef __SYSDIGBPF_HELPERS_H
-#define __SYSDIGBPF_HELPERS_H
+#ifndef __PROBEBPF_HELPERS_H
+#define __PROBEBPF_HELPERS_H
 
 #include <net/compat.h>
 #include <net/sock.h>

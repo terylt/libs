@@ -1,15 +1,15 @@
 0 Introduction
 ------
 
-Sysdig strives for a consistent high quality code base and uses the conventions 
+Falco strives for a consistent high quality code base and uses the conventions 
 below.  If you are going to commit code that doesn't follow them, then you put the
 work on us. :-(.
 
 If you use vim or emacs, you can put a custom configuration file in the base
-directory of sysdig in order to follow the conventions.
+directory of the Falco libs in order to follow the conventions.
 
 Also, note that the conventions in this file apply **strictly to the userspace** part 
-of sysdig. For the kernel code, you should refer to 
+of the code base. For the kernel code, you should refer to 
 https://www.kernel.org/doc/html/latest/process/coding-style.html
 and always run checkpatch.pl from the kernel tree before submitting pull requests.
 
@@ -71,7 +71,7 @@ Note that:
 ------
 
 For portability reasons, please use the standard C99 types instead of the native C types
-like `int` and `long`. C99 types types will be available in all the user level sysdig 
+like `int` and `long`. C99 types types will be available in all the user level 
 source files:
 
 Example:
@@ -263,7 +263,7 @@ as opposed to:
 
 Error management inside libscap is done through return values, since the scap 
 library is written in C.
-Error management in the rest of the sysdig user level code base is done through
+Error management in the rest of the user level code base is done through
 exceptions. We know there's a lot of debate between return values and 
 exceptions. We decided to pick the latter, so please stick with that.
 

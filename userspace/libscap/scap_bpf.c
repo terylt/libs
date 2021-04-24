@@ -46,7 +46,7 @@ limitations under the License.
 // Some of this code is taken from the kernel samples under samples/bpf,
 // namely the parsing of the ELF objects, which is very tedious and not
 // worth reinventing from scratch. The code has been readapted and simplified
-// to tailor the sysdig use case. In the future, sysdig can fully switch to
+// to tailor the falco probe use case. In the future, this code can fully switch to
 // libbpf, but at the moment is not very worth the effort considering the
 // subset of features needed.
 //
@@ -294,10 +294,10 @@ static int32_t load_maps(scap_t *handle, struct bpf_map_data *maps, int nr_maps)
 
 	for(j = 0; j < nr_maps; ++j)
 	{
-		if(j == SYSDIG_PERF_MAP ||
-		   j == SYSDIG_LOCAL_STATE_MAP ||
-		   j == SYSDIG_FRAME_SCRATCH_MAP ||
-		   j == SYSDIG_TMP_SCRATCH_MAP)
+		if(j == SDPROBE_PERF_MAP ||
+		   j == SDPROBE_LOCAL_STATE_MAP ||
+		   j == SDPROBE_FRAME_SCRATCH_MAP ||
+		   j == SDPROBE_TMP_SCRATCH_MAP)
 		{
 			maps[j].def.max_entries = handle->m_ncpus;
 		}
@@ -735,9 +735,9 @@ static int32_t populate_syscall_routing_table_map(scap_t *handle)
 	for(j = 0; j < SYSCALL_TABLE_SIZE; ++j)
 	{
 		long code = g_syscall_code_routing_table[j];
-		if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SYSCALL_CODE_ROUTING_TABLE], &j, &code, BPF_ANY) != 0)
+		if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SYSCALL_CODE_ROUTING_TABLE], &j, &code, BPF_ANY) != 0)
 		{
-			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SYSCALL_CODE_ROUTING_TABLE bpf_map_update_elem < 0");
+			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SYSCALL_CODE_ROUTING_TABLE bpf_map_update_elem < 0");
 			return SCAP_FAILURE;
 		}
 	}
@@ -752,9 +752,9 @@ static int32_t populate_syscall_table_map(scap_t *handle)
 	for(j = 0; j < SYSCALL_TABLE_SIZE; ++j)
 	{
 		const struct syscall_evt_pair *p = &g_syscall_table[j];
-		if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SYSCALL_TABLE], &j, p, BPF_ANY) != 0)
+		if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SYSCALL_TABLE], &j, p, BPF_ANY) != 0)
 		{
-			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SYSCALL_TABLE bpf_map_update_elem < 0");
+			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SYSCALL_TABLE bpf_map_update_elem < 0");
 			return SCAP_FAILURE;
 		}
 	}
@@ -769,9 +769,9 @@ static int32_t populate_event_table_map(scap_t *handle)
 	for(j = 0; j < PPM_EVENT_MAX; ++j)
 	{
 		const struct ppm_event_info *e = &g_event_info[j];
-		if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_EVENT_INFO_TABLE], &j, e, BPF_ANY) != 0)
+		if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_EVENT_INFO_TABLE], &j, e, BPF_ANY) != 0)
 		{
-			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_EVENT_INFO_TABLE bpf_map_update_elem < 0");
+			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_EVENT_INFO_TABLE bpf_map_update_elem < 0");
 			return SCAP_FAILURE;
 		}
 	}
@@ -786,9 +786,9 @@ static int32_t populate_fillers_table_map(scap_t *handle)
 	for(j = 0; j < PPM_EVENT_MAX; ++j)
 	{
 		const struct ppm_event_entry *e = &g_ppm_events[j];
-		if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_FILLERS_TABLE], &j, e, BPF_ANY) != 0)
+		if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_FILLERS_TABLE], &j, e, BPF_ANY) != 0)
 		{
-			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_FILLERS_TABLE bpf_map_update_elem < 0");
+			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_FILLERS_TABLE bpf_map_update_elem < 0");
 			return SCAP_FAILURE;
 		}
 	}
@@ -825,19 +825,19 @@ static int32_t calibrate_socket_file_ops()
 
 int32_t scap_bpf_start_capture(scap_t *handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.capture_enabled = true;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -853,19 +853,19 @@ int32_t scap_bpf_start_capture(scap_t *handle)
 
 int32_t scap_bpf_stop_capture(scap_t *handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.capture_enabled = false;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -874,7 +874,7 @@ int32_t scap_bpf_stop_capture(scap_t *handle)
 
 int32_t scap_bpf_set_snaplen(scap_t* handle, uint32_t snaplen)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
 	if(snaplen > RW_MAX_SNAPLEN)
@@ -883,16 +883,16 @@ int32_t scap_bpf_set_snaplen(scap_t* handle, uint32_t snaplen)
 		return SCAP_FAILURE;
 	}
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.snaplen = snaplen;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -901,20 +901,20 @@ int32_t scap_bpf_set_snaplen(scap_t* handle, uint32_t snaplen)
 
 int32_t scap_bpf_set_fullcapture_port_range(scap_t* handle, uint16_t range_start, uint16_t range_end)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.fullcapture_port_range_start = range_start;
 	settings.fullcapture_port_range_end = range_end;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -923,20 +923,20 @@ int32_t scap_bpf_set_fullcapture_port_range(scap_t* handle, uint16_t range_start
 
 int32_t scap_bpf_set_statsd_port(scap_t* const handle, const uint16_t port)
 {
-	struct sysdig_bpf_settings settings = {};
+	struct sdprobe_bpf_settings settings = {};
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.statsd_port = port;
 
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -945,19 +945,19 @@ int32_t scap_bpf_set_statsd_port(scap_t* const handle, const uint16_t port)
 
 int32_t scap_bpf_disable_dynamic_snaplen(scap_t* handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.do_dynamic_snaplen = false;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -982,20 +982,20 @@ int32_t scap_bpf_start_dropping_mode(scap_t* handle, uint32_t sampling_ratio)
 			return SCAP_FAILURE;
 	}
 
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.sampling_ratio = sampling_ratio;
 	settings.dropping_mode = true;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1004,20 +1004,20 @@ int32_t scap_bpf_start_dropping_mode(scap_t* handle, uint32_t sampling_ratio)
 
 int32_t scap_bpf_stop_dropping_mode(scap_t* handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.sampling_ratio = 1;
 	settings.dropping_mode = false;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1026,19 +1026,19 @@ int32_t scap_bpf_stop_dropping_mode(scap_t* handle)
 
 int32_t scap_bpf_enable_dynamic_snaplen(scap_t* handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.do_dynamic_snaplen = true;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1047,19 +1047,19 @@ int32_t scap_bpf_enable_dynamic_snaplen(scap_t* handle)
 
 int32_t scap_bpf_enable_page_faults(scap_t* handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.page_faults = true;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1068,19 +1068,19 @@ int32_t scap_bpf_enable_page_faults(scap_t* handle)
 
 int32_t scap_bpf_enable_tracers_capture(scap_t* handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 	int k = 0;
 
-	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings) != 0)
+	if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_lookup_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_lookup_elem < 0");
 		return SCAP_FAILURE;
 	}
 
 	settings.tracers_enabled = true;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1247,7 +1247,7 @@ static int32_t set_runtime_params(scap_t *handle)
 
 static int32_t set_default_settings(scap_t *handle)
 {
-	struct sysdig_bpf_settings settings;
+	struct sdprobe_bpf_settings settings;
 
 	if(set_boot_time(handle, &settings.boot_time) != SCAP_SUCCESS)
 	{
@@ -1268,9 +1268,9 @@ static int32_t set_default_settings(scap_t *handle)
 	settings.statsd_port = 8125;
 
 	int k = 0;
-	if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
+	if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_SETTINGS_MAP], &k, &settings, BPF_ANY) != 0)
 	{
-		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_SETTINGS_MAP bpf_map_update_elem < 0");
+		snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_SETTINGS_MAP bpf_map_update_elem < 0");
 		return SCAP_FAILURE;
 	}
 
@@ -1383,9 +1383,9 @@ int32_t scap_bpf_load(scap_t *handle, const char *bpf_probe)
 
 		handle->m_devs[online_cpu].m_fd = pmu_fd;
 
-		if(bpf_map_update_elem(handle->m_bpf_map_fds[SYSDIG_PERF_MAP], &j, &pmu_fd, BPF_ANY) != 0)
+		if(bpf_map_update_elem(handle->m_bpf_map_fds[SDPROBE_PERF_MAP], &j, &pmu_fd, BPF_ANY) != 0)
 		{
-			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SYSDIG_PERF_MAP bpf_map_update_elem < 0: %s", scap_strerror(handle, errno));
+			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "SDPROBE_PERF_MAP bpf_map_update_elem < 0: %s", scap_strerror(handle, errno));
 			return SCAP_FAILURE;
 		}
 
@@ -1428,8 +1428,8 @@ int32_t scap_bpf_get_stats(scap_t* handle, OUT scap_stats* stats)
 
 	for(j = 0; j < handle->m_ncpus; j++)
 	{
-		struct sysdig_bpf_per_cpu_state v;
-		if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_LOCAL_STATE_MAP], &j, &v))
+		struct sdprobe_bpf_per_cpu_state v;
+		if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_LOCAL_STATE_MAP], &j, &v))
 		{
 			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "Error looking up local state %d\n", j);
 			return SCAP_FAILURE;
@@ -1454,8 +1454,8 @@ int32_t scap_bpf_get_n_tracepoint_hit(scap_t* handle, long* ret)
 
 	for(j = 0; j < handle->m_ncpus; j++)
 	{
-		struct sysdig_bpf_per_cpu_state v;
-		if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SYSDIG_LOCAL_STATE_MAP], &j, &v))
+		struct sdprobe_bpf_per_cpu_state v;
+		if(bpf_map_lookup_elem(handle->m_bpf_map_fds[SDPROBE_LOCAL_STATE_MAP], &j, &v))
 		{
 			snprintf(handle->m_lasterr, SCAP_LASTERR_SIZE, "Error looking up local state %d\n", j);
 			return SCAP_FAILURE;

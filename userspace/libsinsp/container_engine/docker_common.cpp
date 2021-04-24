@@ -859,8 +859,7 @@ bool docker_async_source::parse_docker(const docker_async_instruction& instructi
 	container.m_size_rw_bytes = root["SizeRw"].asInt64();
 
 #ifdef HAS_ANALYZER
-	sinsp_utils::find_env(container.m_sysdig_agent_conf, container.get_env(), "SYSDIG_AGENT_CONF");
-	// container.m_sysdig_agent_conf = get_docker_env(env_vars, "SYSDIG_AGENT_CONF");
+	sinsp_utils::find_env(container.m_agent_conf, container.get_env(), "SYSDIG_AGENT_CONF");
 #endif
 
 	g_logger.format(sinsp_logger::SEV_DEBUG,

@@ -15,7 +15,7 @@
 #
 
 # Prior to doing anything, we make sure that we aren't trying to
-# run cmake in-tree. (see Issue 71: https://github.com/draios/sysdig/issues/71)
+# run cmake in-tree.
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists.txt)
 	message(FATAL_ERROR
 		"Looks like you are trying to run cmake from the base sysdig source directory.\n"

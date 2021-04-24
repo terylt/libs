@@ -55,7 +55,7 @@ limitations under the License.
 //#define NDEBUG
 #include <assert.h>
 
-static const char *SYSDIG_BPF_PROBE_ENV = "SYSDIG_BPF_PROBE";
+static const char *BPF_PROBE_ENV = "SYSDIG_BPF_PROBE";
 
 //
 // Probe version string size
@@ -168,7 +168,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
 	// While in theory we could always rely on the scap caller to properly
 	// set a BPF probe from the environment variable, it's in practice easier
 	// to do one more check here in scap so we don't have to repeat the logic
-	// in all the possible users of the libraries (sysdig, csysdig, dragent, ...)
+	// in all the possible users of the libraries
 	//
 	if(!bpf_probe)
 	{
@@ -351,7 +351,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
 				else if(errno == EBUSY)
 				{
 					uint32_t curr_max_consumers = get_max_consumers();
-					snprintf(error, SCAP_LASTERR_SIZE, "Too many sysdig instances attached to device %s. Current value for /sys/module/" PROBE_DEVICE_NAME "_probe/parameters/max_consumers is '%"PRIu32"'.", filename, curr_max_consumers);
+					snprintf(error, SCAP_LASTERR_SIZE, "Too many open instances attached to device %s. Current value for /sys/module/" PROBE_DEVICE_NAME "_probe/parameters/max_consumers is '%"PRIu32"'.", filename, curr_max_consumers);
 				}
 				else
 				{
@@ -442,7 +442,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
 	}
 
 	//
-	// Now that sysdig has done all its /proc parsing, start the capture
+	// Now we have done all its /proc parsing, start the capture
 	//
 	if((*rc = scap_start_capture(handle)) != SCAP_SUCCESS)
 	{
@@ -646,7 +646,7 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
 	}
 
 	//
-	// Now that sysdig has done all its /proc parsing, start the capture
+	// Now that we have done all its /proc parsing, start the capture
 	//
 	if(udig_begin_capture(handle, error) != SCAP_SUCCESS)
 	{
@@ -2458,7 +2458,7 @@ wh_t* scap_get_wmi_handle(scap_t* handle)
 
 const char *scap_get_bpf_probe_from_env()
 {
-	return getenv(SYSDIG_BPF_PROBE_ENV);
+	return getenv(BPF_PROBE_ENV);
 }
 
 bool scap_get_bpf_enabled(scap_t *handle)
