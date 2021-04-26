@@ -18,8 +18,8 @@
 # run cmake in-tree.
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists.txt)
 	message(FATAL_ERROR
-		"Looks like you are trying to run cmake from the base sysdig source directory.\n"
-		"** RUNNING CMAKE FROM THE BASE SYSDIG DIRECTORY WILL NOT WORK **\n"
+		"Looks like you are trying to run cmake from the base libs source directory.\n"
+		"** RUNNING CMAKE FROM THE BASE LIBS DIRECTORY WILL NOT WORK **\n"
 		"To Fix:\n"
 		" 1. Remove the CMakeCache.txt file in this directory. ex: rm CMakeCache.txt\n"
 		" 2. Create a build directory from here. ex: mkdir build\n"
@@ -27,15 +27,14 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/CMakeLists.txt)
 		" 4. Run cmake from the build directory. ex: cmake ..\n"
 		" 5. Run make from the build directory. ex: make\n"
 		"Full paste-able example:\n"
-		"( rm -f CMakeCache.txt; mkdir build; cd build; cmake ..; make )\n"
-		"The following wiki page has more information on manually building sysdig: http://bit.ly/1oJ84UI")
+		"( rm -f CMakeCache.txt; mkdir build; cd build; cmake ..; make )")
 endif()
 
 cmake_minimum_required(VERSION 2.8.2)
 
 project(sysdig)
 
-option(MINIMAL_BUILD "Produce a minimal sysdig binary with only the essential features (no eBPF probe driver, no kubernetes, no mesos, no marathon and no container metadata)" OFF)
+option(MINIMAL_BUILD "Produce a minimal binary with only the essential features (no eBPF probe driver, no kubernetes, no mesos, no marathon and no container metadata)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
 # Add path for custom CMake modules.
