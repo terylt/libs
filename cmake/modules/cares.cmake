@@ -49,8 +49,8 @@ else()
 		message(STATUS "Using bundled c-ares in '${CARES_SRC}'")
 		ExternalProject_Add(c-ares
 			PREFIX "${PROJECT_BINARY_DIR}/c-ares-prefix"
-			URL "https://c-ares.haxx.se/download/c-ares-1.19.1.tar.gz"
-			URL_HASH "SHA256=321700399b72ed0e037d0074c629e7741f6b2ec2dda92956abe3e9671d3e268e"
+			URL "https://github.com/c-ares/c-ares/archive/refs/tags/cares-1_29_0.tar.gz"
+			URL_HASH "SHA256=48c9205a64d5df05e6ac18bce2d7fb6d71240617f8c6243cac0589acc3d991f1"
 			CONFIGURE_COMMAND CPPFLAGS=${CARES_CPPFLAGS} ./configure ${CARES_STATIC_OPTION} ${CARES_PIC_OPTION} --prefix=${CARES_INSTALL_DIR}
 			BUILD_COMMAND make
 			BUILD_IN_SOURCE 1
